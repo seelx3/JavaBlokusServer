@@ -7,7 +7,15 @@ import java.util.*;
 public class JavaBlokusThread extends Thread {
     protected Socket conn;
     static Vector<JavaBlokusThread> threads;
-    String nickname = null;
+    static int assignId = 0; // 0 or 1
+
+    static Communication comObj;
+
+    String playerName;
+    int playerId;
+
+    static boolean ready = false;
+
 
     public JavaBlokusThread(Socket s) {
         conn = s;
@@ -23,16 +31,47 @@ public class JavaBlokusThread extends Thread {
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(
                             conn.getInputStream())); // データ受信用バッファの設定
-            while (true) {
-                String str = in.readLine();
-                if (str.equals("thread-size")) {
-                    System.out.println("thread-size is " + threads.size());
-                }
-                if (str.equals("END"))
+
+            PrintWriter out = new PrintWriter(
+                    new BufferedWriter(
+                            new OutputStreamWriter(
+                                    conn.getOutputStream())),
+                    true); // 送信バッファ設定
+
+            ready = false;
+
+            // プレイヤーの名前を受け取る
+            playerName = in.readLine();
+
+            // プレイヤーのIDを渡す
+            playerId = assignId;
+            out.println(assignId);
+            assignId = (assignId + 1) % 2;
+
+            if(threads.size() == 1) InitObj();
+            if(threads.size() == 2) ready = true;
+
+            try {
+                while (true) {
+                    // TODO: 2人目のID渡しが完了したらオブジェクトを送信する
+                    if(!ready) {
+                        wait(100);
+                        continue;
+                    }
+
+                    // TODO: オブジェクトをjsonにしてクライアントに送信
+                    // 各クライアントに同時にオブジェクトを送信したい
+                    out.println(comObj);
+
+                    // TODO: このスレッドのクライアントのターンであれば、クライアントからの応答を待つ
+
+                    wait(100);
                     break;
-                System.out.println("Echoing : " + str);
-                talk(str);
+                }
+            } catch (InterruptedException ie) {
+                System.out.println(ie);
             }
+
             conn.close();
             System.out.println("Connection Closed");
             threads.remove(this);
@@ -42,26 +81,9 @@ public class JavaBlokusThread extends Thread {
         }
     }
 
-    public void talk(String message) {
-        for (int i = 0; i < threads.size(); i++) {
-            JavaBlokusThread t = threads.get(i);
-            if (t.isAlive()) {
-                t.talkone(t, message);
-            }
-        }
+    private void InitObj() {
+        int[][] tmp = new int[14][14];
+        Communication.setCom(0, tmp, false, false, "whowon");
     }
 
-    public void talkone(JavaBlokusThread talker, String message) {
-        try {
-            PrintWriter out = new PrintWriter(
-                    new BufferedWriter(
-                            new OutputStreamWriter(
-                                    conn.getOutputStream())),
-                    true); // 送信バッファ設定
-            out.println(message);
-            System.out.println(talker + " " + message);
-        } catch (IOException e) {
-            System.err.println(e);
-        }
-    }
 }

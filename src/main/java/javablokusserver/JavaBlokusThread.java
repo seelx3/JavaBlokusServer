@@ -4,17 +4,21 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 public class JavaBlokusThread extends Thread {
     protected Socket conn;
     static Vector<JavaBlokusThread> threads;
     static int assignId = 0; // 0 or 1
 
-    static Communication comObj;
+    static public Communication comObj;
 
     String playerName;
     int playerId;
 
-    static boolean ready = false;
+    public ObjectMapper mapper;
 
 
     public JavaBlokusThread(Socket s) {
@@ -23,6 +27,8 @@ public class JavaBlokusThread extends Thread {
             threads = new Vector<JavaBlokusThread>();
         }
         threads.add(this);
+        mapper = new ObjectMapper();
+        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     }
 
     public void run() {
@@ -32,44 +38,59 @@ public class JavaBlokusThread extends Thread {
                     new InputStreamReader(
                             conn.getInputStream())); // データ受信用バッファの設定
 
-            PrintWriter out = new PrintWriter(
-                    new BufferedWriter(
-                            new OutputStreamWriter(
-                                    conn.getOutputStream())),
-                    true); // 送信バッファ設定
-
-            ready = false;
 
             // プレイヤーの名前を受け取る
             playerName = in.readLine();
+            System.out.println("Get Player Name : " + playerName);
 
             // プレイヤーのIDを渡す
             playerId = assignId;
-            out.println(assignId);
+            sendPlayerId(playerId);
             assignId = (assignId + 1) % 2;
 
-            if(threads.size() == 1) InitObj();
-            if(threads.size() == 2) ready = true;
+            if(threads.size() == 1) {
+                comObj = new Communication();
+                initObj();
+                System.out.println("initObj: \n" + comObj);
+            }
+            if(threads.size() == 2) {
+                System.out.println("obj: \n" + comObj);
+                try{
+                    System.out.println("json: \n" + mapper.writeValueAsString(comObj));
+                    sendToClients(mapper.writeValueAsString(comObj));
+                } catch (JsonProcessingException jpe) {
+                    System.err.println(jpe);
+                } catch (IOException e) {
+                    System.err.println(e);
+                }
+            }
 
             try {
                 while (true) {
-                    // TODO: 2人目のID渡しが完了したらオブジェクトを送信する
-                    if(!ready) {
-                        wait(100);
-                        continue;
+                    try {
+                        String objJson = in.readLine();
+                        if (objJson == null) {
+                            conn.close();
+                            threads.remove(this);
+                            return;
+                        }
+
+                        // TODO: クライアントからオブジェクトを受け取ったら、
+                        //  各クライアントに更新後ののオブジェクトを送信する。
+                        comObj = mapper.readValue(objJson, Communication.class);
+                        comObj.updateTurn();
+                        sendToClients(mapper.writeValueAsString(comObj));
+                    } catch (IOException e) {
+                        System.err.println("Connection Closed!");
+                        conn.close();
+                        threads.remove(this);
+                        return;
                     }
 
-                    // TODO: オブジェクトをjsonにしてクライアントに送信
-                    // 各クライアントに同時にオブジェクトを送信したい
-                    out.println(comObj);
 
-                    // TODO: このスレッドのクライアントのターンであれば、クライアントからの応答を待つ
-
-                    wait(100);
-                    break;
                 }
-            } catch (InterruptedException ie) {
-                System.out.println(ie);
+            } catch (IOException e) {
+                System.err.println(e);
             }
 
             conn.close();
@@ -81,9 +102,50 @@ public class JavaBlokusThread extends Thread {
         }
     }
 
-    private void InitObj() {
+    private void sendToClients(String msg) {
+        for(int i = 0; i < threads.size(); i++) {
+            JavaBlokusThread th = threads.get(i);
+            if(th.isAlive()) {
+                th.sendToClient(th, msg);
+            }
+        }
+    }
+
+    public void sendToClient(JavaBlokusThread th, String msg) {
+        try{
+            PrintWriter out = new PrintWriter(
+                    new BufferedWriter(
+                            new OutputStreamWriter(
+                                    conn.getOutputStream())),
+                    true); // 送信バッファ設定
+            out.println(msg);
+            System.out.println("Send " + msg + "\nto " + th);
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+    }
+
+    private void sendPlayerId(int id) {
+        try{
+            PrintWriter out = new PrintWriter(
+                    new BufferedWriter(
+                            new OutputStreamWriter(
+                                    conn.getOutputStream())),
+                    true); // 送信バッファ設定
+            out.println(id);
+            System.out.println("Send playerId : " + id + " to " + this);
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+    }
+
+    private void initObj() {
         int[][] tmp = new int[14][14];
-        Communication.setCom(0, tmp, false, false, "whowon");
+        comObj.turn = 0;
+        comObj.board = tmp;
+        comObj.giveup = false;
+        comObj.finished = false;
+        comObj.whowon = "whowon";
     }
 
 }

@@ -8,6 +8,7 @@ import java.io.IOException;
 
 public class JavaBlokusServer {
     final static int PORT = 8090;
+    final static int PLAYER_NUM = 2;
 
     public static void main(String[] args)
         throws IOException {

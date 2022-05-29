@@ -10,6 +10,9 @@ public class JavaBlokusServer {
     final static int PORT = 8090;
     final static int PLAYER_NUM = 2;
 
+    final static int BOARD_WIDTH = 14;
+    final static int BOARD_HEIGHT = 14;
+
     public static void main(String[] args)
         throws IOException {
         ServerSocket server = new ServerSocket(PORT);

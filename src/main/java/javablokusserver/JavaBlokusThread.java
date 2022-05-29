@@ -48,13 +48,15 @@ public class JavaBlokusThread extends Thread {
             sendPlayerId(playerId);
             assignId = (assignId + 1) % 2;
 
-            if(threads.size() == 1) {
+//            if(threads.size() == 1) {
+//                comObj = new Communication();
+//                initObj();
+//                System.out.println("initObj: \n" + comObj);
+//            }
+            if(threads.size() == JavaBlokusServer.PLAYER_NUM) {
                 comObj = new Communication();
                 initObj();
                 System.out.println("initObj: \n" + comObj);
-            }
-            if(threads.size() == 2) {
-                System.out.println("obj: \n" + comObj);
                 try{
                     System.out.println("json: \n" + mapper.writeValueAsString(comObj));
                     sendToClients(mapper.writeValueAsString(comObj));
@@ -140,9 +142,14 @@ public class JavaBlokusThread extends Thread {
     }
 
     private void initObj() {
-        int[][] tmp = new int[14][14];
+        int[][] tmpBoard = new int[JavaBlokusServer.BOARD_HEIGHT][JavaBlokusServer.BOARD_WIDTH];
+        String[] players = new String[JavaBlokusServer.PLAYER_NUM];
+        for(int i = 0; i < JavaBlokusServer.PLAYER_NUM; i++) {
+            players[i] = threads.get(i).playerName;
+        }
+        comObj.players = players;
         comObj.turn = 0;
-        comObj.board = tmp;
+        comObj.board = tmpBoard;
         comObj.giveup = false;
         comObj.finished = false;
         comObj.whowon = "whowon";

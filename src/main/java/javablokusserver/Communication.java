@@ -1,7 +1,5 @@
 package javablokusserver;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Communication {
@@ -12,7 +10,7 @@ public class Communication {
     public boolean finished;
     public String whowon;
 
-    public boolean[][] availablePieces;
+    public boolean[][] usedPiece;
 
     @Override
     public String toString() {
@@ -21,8 +19,8 @@ public class Communication {
             boardStat += Arrays.toString(board[i]) + "\n";
         }
         return "{\nplayers: " + Arrays.deepToString(players) + "\nturn: " + turn + "\nboard:\n" + boardStat +
-                "giveup: " + giveup + "\nfinished: " + finished + "\nwhowon: " + whowon + "\navailablePieces: " +
-                Arrays.deepToString(availablePieces) + "\n}\n";
+                "giveup: " + giveup + "\nfinished: " + finished + "\nwhowon: " + whowon + "\nusedPiece: " +
+                Arrays.deepToString(usedPiece) + "\n}\n";
     }
 
     public void updateTurn() {

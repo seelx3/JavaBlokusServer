@@ -155,7 +155,7 @@ public class JavaBlokusThread extends Thread {
         comObj.giveup = false;
         comObj.finished = false;
         comObj.whowon = "whowon";
-        comObj.availablePieces = tmpAvailablePiece;
+        comObj.usedPiece = tmpAvailablePiece;
     }
 
 }

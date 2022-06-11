@@ -54,6 +54,8 @@ public class JavaBlokusThread extends Thread {
 //                System.out.println("initObj: \n" + comObj);
 //            }
             if(threads.size() == JavaBlokusServer.PLAYER_NUM) {
+                System.out.println("Start Blokus!");
+                sendToClients("Start Blokus!");
                 comObj = new Communication();
                 initObj();
                 System.out.println("initObj: \n" + comObj);
@@ -62,8 +64,6 @@ public class JavaBlokusThread extends Thread {
                     sendToClients(mapper.writeValueAsString(comObj));
                 } catch (JsonProcessingException jpe) {
                     System.err.println(jpe);
-                } catch (IOException e) {
-                    System.err.println(e);
                 }
             }
 
@@ -142,8 +142,10 @@ public class JavaBlokusThread extends Thread {
     }
 
     private void initObj() {
-        int[][] tmpBoard = new int[JavaBlokusServer.BOARD_HEIGHT][JavaBlokusServer.BOARD_WIDTH];
+        final int boardSize = JavaBlokusServer.BOARD_SIZE;
+        int[][] tmpBoard = new int[boardSize][boardSize];
         String[] players = new String[JavaBlokusServer.PLAYER_NUM];
+        boolean[][] tmpAvailablePiece = new boolean[JavaBlokusServer.PLAYER_NUM][JavaBlokusServer.PIECES_NUM];
         for(int i = 0; i < JavaBlokusServer.PLAYER_NUM; i++) {
             players[i] = threads.get(i).playerName;
         }
@@ -153,6 +155,7 @@ public class JavaBlokusThread extends Thread {
         comObj.giveup = false;
         comObj.finished = false;
         comObj.whowon = "whowon";
+        comObj.availablePieces = tmpAvailablePiece;
     }
 
 }

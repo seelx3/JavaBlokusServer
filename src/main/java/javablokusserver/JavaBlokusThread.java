@@ -77,13 +77,20 @@ public class JavaBlokusThread extends Thread {
                             return;
                         }
 
-                        // TODO: クライアントからオブジェクトを受け取ったら、
-                        //  各クライアントに更新後ののオブジェクトを送信する。
                         comObj = mapper.readValue(objJson, Communication.class);
                         comObj.updateTurn();
+
+                        if(comObj.giveup) {
+                            comObj.whowon = comObj.players[comObj.turn];
+                            comObj.finished = true;
+                            sendToClients(mapper.writeValueAsString(comObj));
+                            closeConnection();
+                            break;
+                        }
+
                         sendToClients(mapper.writeValueAsString(comObj));
                     } catch (IOException e) {
-                        System.err.println("Connection Closed!");
+                        System.err.println("Connection Closed! (Exception)");
                         conn.close();
                         threads.remove(this);
                         return;
@@ -125,6 +132,26 @@ public class JavaBlokusThread extends Thread {
         } catch (IOException e) {
             System.err.println(e);
         }
+    }
+
+    public void closeConnection() {
+        for(int i = 0; i < threads.size(); i++) {
+            if(this == threads.get(i)) continue;
+            JavaBlokusThread th = threads.get(i);
+            if(th.isAlive()) {
+                th.closeConn(th);
+            }
+        }
+    }
+
+    public void closeConn(JavaBlokusThread th) {
+        try {
+            System.out.println("close " + th);
+            th.conn.close();
+        } catch (IOException ioe) {
+            System.err.println(ioe);
+        }
+        threads.remove(th);
     }
 
     private void sendPlayerId(int id) {

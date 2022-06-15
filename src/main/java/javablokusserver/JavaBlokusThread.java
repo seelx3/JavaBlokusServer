@@ -136,10 +136,10 @@ public class JavaBlokusThread extends Thread {
     }
 
     public void closeConnection() {
-        for (JavaBlokusThread thread : threads) {
-            if (this == thread) continue;
-            JavaBlokusThread th = thread;
-            if (th.isAlive()) {
+        for(int i = 0; i < threads.size(); i++) {
+            if(this == threads.get(i)) continue;
+            JavaBlokusThread th = threads.get(i);
+            if(th.isAlive()) {
                 th.closeConn(th);
             }
         }

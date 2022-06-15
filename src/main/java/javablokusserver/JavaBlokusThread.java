@@ -48,19 +48,14 @@ public class JavaBlokusThread extends Thread {
             sendPlayerId(playerId);
             assignId = (assignId + 1) % 2;
 
-//            if(threads.size() == 1) {
-//                comObj = new Communication();
-//                initObj();
-//                System.out.println("initObj: \n" + comObj);
-//            }
             if(threads.size() == JavaBlokusServer.PLAYER_NUM) {
-                System.out.println("Start Blokus!");
+//                System.out.println("Start Blokus!");
                 sendToClients("Start Blokus!");
                 comObj = new Communication();
                 initObj();
-                System.out.println("initObj: \n" + comObj);
+//                System.out.println("initObj: \n" + comObj);
                 try{
-                    System.out.println("json: \n" + mapper.writeValueAsString(comObj));
+//                    System.out.println("json: \n" + mapper.writeValueAsString(comObj));
                     sendToClients(mapper.writeValueAsString(comObj));
                 } catch (JsonProcessingException jpe) {
                     System.err.println(jpe);
@@ -129,7 +124,7 @@ public class JavaBlokusThread extends Thread {
                                     conn.getOutputStream())),
                     true); // 送信バッファ設定
             out.println(msg);
-            System.out.println("Send " + msg + "\nto " + th);
+//            System.out.println("Send " + msg + "\nto " + th);
         } catch (IOException e) {
             System.err.println(e);
         }
@@ -163,7 +158,7 @@ public class JavaBlokusThread extends Thread {
                                     conn.getOutputStream())),
                     true); // 送信バッファ設定
             out.println(id);
-            System.out.println("Send playerId : " + id + " to " + this);
+//            System.out.println("Send playerId : " + id + " to " + this);
         } catch (IOException e) {
             System.err.println(e);
         }

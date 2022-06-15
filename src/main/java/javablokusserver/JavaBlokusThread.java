@@ -24,7 +24,7 @@ public class JavaBlokusThread extends Thread {
     public JavaBlokusThread(Socket s) {
         conn = s;
         if (threads == null) {
-            threads = new Vector<JavaBlokusThread>();
+            threads = new Vector<>();
         }
         threads.add(this);
         mapper = new ObjectMapper();
@@ -91,8 +91,10 @@ public class JavaBlokusThread extends Thread {
                         sendToClients(mapper.writeValueAsString(comObj));
                     } catch (IOException e) {
                         System.err.println("Connection Closed! (Exception)");
-                        conn.close();
-                        threads.remove(this);
+                        comObj.finished = true;
+                        sendToClients(mapper.writeValueAsString(comObj));
+                        closeConnection();
+                        threads.removeAllElements();
                         return;
                     }
 
@@ -112,9 +114,8 @@ public class JavaBlokusThread extends Thread {
     }
 
     private void sendToClients(String msg) {
-        for(int i = 0; i < threads.size(); i++) {
-            JavaBlokusThread th = threads.get(i);
-            if(th.isAlive()) {
+        for (JavaBlokusThread th : threads) {
+            if (th.isAlive()) {
                 th.sendToClient(th, msg);
             }
         }
@@ -135,10 +136,10 @@ public class JavaBlokusThread extends Thread {
     }
 
     public void closeConnection() {
-        for(int i = 0; i < threads.size(); i++) {
-            if(this == threads.get(i)) continue;
-            JavaBlokusThread th = threads.get(i);
-            if(th.isAlive()) {
+        for (JavaBlokusThread thread : threads) {
+            if (this == thread) continue;
+            JavaBlokusThread th = thread;
+            if (th.isAlive()) {
                 th.closeConn(th);
             }
         }
@@ -181,7 +182,7 @@ public class JavaBlokusThread extends Thread {
         comObj.board = tmpBoard;
         comObj.giveup = false;
         comObj.finished = false;
-        comObj.whowon = "whowon";
+        comObj.whowon = "nobody";
         comObj.usedPiece = tmpAvailablePiece;
     }
 
